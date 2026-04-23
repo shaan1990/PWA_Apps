@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Spring Boot MCQ Quiz – Test your knowledge" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SB Quiz" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Spring Boot Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --surface: #111827;
+      --card: #1a2235;
+      --border: #1e3a5f;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --green: #34d399;
+      --red: #f87171;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --font-head: 'Sora', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-head);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ---- GRID BG ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app { position: relative; z-index: 1; }
+
+    /* ---- SPLASH ---- */
+    #splash {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; padding: 2rem;
+      text-align: center;
+      animation: fadeIn .6s ease;
+    }
+
+    .logo-badge {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 40px rgba(56,189,248,0.3);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 30px rgba(56,189,248,0.3); }
+      50% { box-shadow: 0 0 60px rgba(56,189,248,0.6); }
+    }
+
+    .splash-title {
+      font-size: 2.4rem; font-weight: 800;
+      line-height: 1.1; margin-bottom: .5rem;
+      background: linear-gradient(135deg, #e2e8f0, #38bdf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .splash-sub {
+      font-family: var(--font-mono);
+      font-size: .8rem; color: var(--accent);
+      letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .splash-desc {
+      color: var(--muted); font-size: .95rem;
+      max-width: 320px; line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+
+    .tag-row {
+      display: flex; flex-wrap: wrap; gap: .5rem;
+      justify-content: center; margin-bottom: 2.5rem;
+    }
+
+    .tag {
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: .7rem; padding: .3rem .7rem;
+      border-radius: 999px;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      border: none; border-radius: 14px;
+      color: #0a0f1e; font-family: var(--font-head);
+      font-weight: 800; font-size: 1.05rem;
+      padding: 1rem 2.5rem; cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(56,189,248,0.35);
+    }
+    .btn-start:active { transform: scale(.96); }
+
+    .stats-row {
+      display: flex; gap: 2rem; margin-top: 2.5rem;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: var(--font-mono);
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ---- QUIZ ---- */
+    #quiz { display: none; padding: 1.2rem; max-width: 480px; margin: 0 auto; }
+
+    .quiz-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem; padding-bottom: .8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .q-counter {
+      font-family: var(--font-mono);
+      font-size: .75rem; color: var(--muted);
+    }
+
+    .q-counter span { color: var(--accent); font-weight: 700; }
+
+    .score-live {
+      font-family: var(--font-mono);
+      font-size: .75rem; color: var(--accent2);
+    }
+
+    /* progress bar */
+    .progress-track {
+      width: 100%; height: 4px;
+      background: var(--border); border-radius: 99px;
+      margin-bottom: 1.5rem; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    .q-category {
+      font-family: var(--font-mono);
+      font-size: .68rem; color: var(--accent2);
+      text-transform: uppercase; letter-spacing: .1em;
+      margin-bottom: .5rem;
+    }
+
+    .q-text {
+      font-size: 1.05rem; font-weight: 600;
+      line-height: 1.5; margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .options { display: flex; flex-direction: column; gap: .7rem; }
+
+    .opt {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 12px; padding: .9rem 1rem;
+      cursor: pointer; display: flex; align-items: center;
+      gap: .8rem; transition: border-color .15s, background .15s, transform .1s;
+      font-size: .92rem; line-height: 1.4;
+    }
+
+    .opt:active { transform: scale(.98); }
+    .opt:hover:not(.disabled) { border-color: var(--accent); background: rgba(56,189,248,0.05); }
+
+    .opt-letter {
+      min-width: 28px; height: 28px;
+      border-radius: 8px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: .75rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+
+    .opt.correct { border-color: var(--green); background: rgba(52,211,153,0.08); }
+    .opt.correct .opt-letter { background: var(--green); color: #0a0f1e; border-color: var(--green); }
+    .opt.wrong { border-color: var(--red); background: rgba(248,113,113,0.08); }
+    .opt.wrong .opt-letter { background: var(--red); color: #0a0f1e; border-color: var(--red); }
+    .opt.disabled { cursor: default; pointer-events: none; }
+
+    .explanation {
+      margin-top: 1rem;
+      background: rgba(56,189,248,0.06);
+      border: 1px solid rgba(56,189,248,0.15);
+      border-radius: 10px; padding: .85rem 1rem;
+      font-size: .85rem; color: #94a3b8; line-height: 1.5;
+      animation: slideUp .3s ease;
+    }
+    .explanation strong { color: var(--accent); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-next {
+      margin-top: 1.2rem; width: 100%;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      border: none; border-radius: 12px;
+      color: #0a0f1e; font-family: var(--font-head);
+      font-weight: 700; font-size: .95rem;
+      padding: .85rem; cursor: pointer;
+      display: none;
+      animation: fadeIn .3s ease;
+    }
+    .btn-next.visible { display: block; }
+    .btn-next:active { transform: scale(.97); }
+
+    /* ---- RESULT ---- */
+    #result {
+      display: none; flex-direction: column;
+      align-items: center; text-align: center;
+      padding: 2rem 1.5rem; min-height: 100vh;
+      justify-content: center;
+      animation: fadeIn .6s ease;
+    }
+
+    .result-ring {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) var(--pct, 0%), var(--border) 0%);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .result-ring::after {
+      content: '';
+      position: absolute;
+      width: 110px; height: 110px;
+      background: var(--bg); border-radius: 50%;
+    }
+    .result-score-text {
+      position: relative; z-index: 1;
+      font-family: var(--font-mono);
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--accent);
+    }
+
+    .result-grade {
+      font-size: 2rem; font-weight: 800;
+      margin-bottom: .4rem;
+      background: linear-gradient(135deg, #e2e8f0, #38bdf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .result-msg { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+
+    .breakdown {
+      width: 100%; max-width: 340px;
+      background: var(--card); border-radius: 14px;
+      border: 1px solid var(--border); padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .bd-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: .5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .85rem;
+    }
+    .bd-row:last-child { border-bottom: none; }
+    .bd-label { color: var(--muted); }
+    .bd-val { font-family: var(--font-mono); font-weight: 700; }
+    .bd-val.g { color: var(--green); }
+    .bd-val.r { color: var(--red); }
+    .bd-val.b { color: var(--accent); }
+
+    .btn-retry {
+      background: var(--card); border: 1.5px solid var(--accent);
+      border-radius: 12px; color: var(--accent);
+      font-family: var(--font-head); font-weight: 700;
+      font-size: .95rem; padding: .85rem 2rem;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-retry:hover { background: rgba(56,189,248,0.1); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .install-banner {
+      position: fixed; bottom: 1rem; left: 1rem; right: 1rem;
+      background: var(--card); border: 1px solid var(--accent);
+      border-radius: 14px; padding: 1rem;
+      display: flex; align-items: center; gap: .8rem;
+      z-index: 999; animation: slideUp .4s ease;
+      max-width: 480px; margin: 0 auto;
+    }
+    .install-banner p { font-size: .82rem; color: var(--text); flex: 1; line-height: 1.4; }
+    .install-banner p span { color: var(--accent); font-weight: 700; }
+    .btn-install {
+      background: var(--accent); color: #0a0f1e;
+      border: none; border-radius: 8px;
+      font-weight: 700; font-size: .8rem;
+      padding: .5rem .9rem; cursor: pointer; white-space: nowrap;
+    }
+    .btn-dismiss {
+      background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="logo-badge">🍃</div>
+    <div class="splash-title">Spring Boot<br/>Quiz</div>
+    <div class="splash-sub">v4.0 Edition</div>
+    <p class="splash-desc">Test your knowledge on Spring Boot concepts, REST APIs, HTTP methods &amp; microservices.</p>
+    <div class="tag-row">
+      <span class="tag">Spring Boot 4</span>
+      <span class="tag">REST APIs</span>
+      <span class="tag">HTTP Methods</span>
+      <span class="tag">Microservices</span>
+      <span class="tag">Security</span>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Start Quiz →</button>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">20</div><div class="stat-label">Questions</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-label">Topics</div></div>
+      <div class="stat"><div class="stat-num">~8</div><div class="stat-label">Minutes</div></div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz">
+    <div class="quiz-header">
+      <div class="q-counter">Question <span id="qNum">1</span> / <span id="qTotal">20</span></div>
+      <div class="score-live">Score: <span id="scoreLive">0</span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="q-category" id="qCat"></div>
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="options"></div>
+    <div class="explanation" id="explanation" style="display:none"></div>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next Question →</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div class="result-ring" id="resultRing">
+      <div class="result-score-text" id="resultScoreText"></div>
+    </div>
+    <div class="result-grade" id="resultGrade"></div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="breakdown">
+      <div class="bd-row"><span class="bd-label">✅ Correct</span><span class="bd-val g" id="bdCorrect"></span></div>
+      <div class="bd-row"><span class="bd-label">❌ Wrong</span><span class="bd-val r" id="bdWrong"></span></div>
+      <div class="bd-row"><span class="bd-label">📊 Accuracy</span><span class="bd-val b" id="bdAcc"></span></div>
+    </div>
+    <button class="btn-retry" onclick="retryQuiz()">🔁 Try Again</button>
+  </div>
+
+</div>
+
+<!-- Install Banner -->
+<div class="install-banner" id="installBanner" style="display:none">
+  <span style="font-size:1.4rem">📲</span>
+  <p>Install <span>Spring Boot Quiz</span> on your home screen for offline access!</p>
+  <button class="btn-install" id="btnInstall">Install</button>
+  <button class="btn-dismiss" onclick="document.getElementById('installBanner').style.display='none'">✕</button>
+</div>
+
+<script>
+const questions = [
+  // Spring Boot 4 – What's New
+  {
+    cat: "Spring Boot 4 – New Features",
+    q: "What is the minimum Java version required for Spring Boot 4.0?",
+    opts: ["Java 11", "Java 17", "Java 8", "Java 21"],
+    ans: 1,
+    exp: "Spring Boot 4 requires <strong>Java 17+</strong> as the baseline and is optimised for Java 21/25."
+  },
+  {
+    cat: "Spring Boot 4 – New Features",
+    q: "Which feature in Spring Boot 4 helps detect null pointer issues early during development?",
+    opts: ["Optional<>", "JSpecify annotations", "Lombok @NonNull", "Jakarta validation"],
+    ans: 1,
+    exp: "<strong>JSpecify annotations</strong> are used in Spring Boot 4 for null safety, spotting NPE risks at development time."
+  },
+  {
+    cat: "Spring Boot 4 – New Features",
+    q: "What does this annotation do in Spring Boot 4? @GetMapping(value=\"/users\", version=\"2\")",
+    opts: ["Marks the endpoint as async", "Enables built-in API versioning", "Registers a WebSocket route", "Creates a PATCH endpoint"],
+    ans: 1,
+    exp: "Spring Boot 4 introduced <strong>built-in API versioning</strong>. The framework automatically routes to the correct version."
+  },
+  {
+    cat: "Spring Boot 4 – New Features",
+    q: "Which observability stack is integrated in Spring Boot 4 for metrics, logs, and tracing?",
+    opts: ["Prometheus + Grafana", "Micrometer 2 + OpenTelemetry", "ELK Stack", "Datadog Agent"],
+    ans: 1,
+    exp: "Spring Boot 4 integrates <strong>Micrometer 2 + OpenTelemetry</strong> for easy cloud-native observability."
+  },
+  {
+    cat: "Spring Boot 4 – New Features",
+    q: "GraalVM native image support in Spring Boot 4 is improved primarily to achieve which benefit?",
+    opts: ["Better IDE support", "Faster startup and lower memory", "More annotations", "Improved SQL support"],
+    ans: 1,
+    exp: "Improved <strong>GraalVM native image</strong> support enables faster startup and reduced memory usage — ideal for Kubernetes and serverless."
+  },
+
+  // REST API Clients
+  {
+    cat: "REST API Clients",
+    q: "Which REST client is now deprecated and not recommended for new Spring Boot projects?",
+    opts: ["WebClient", "RestTemplate", "RestClient", "FeignClient"],
+    ans: 1,
+    exp: "<strong>RestTemplate</strong> is deprecated. Use WebClient, RestClient, or HTTP Interfaces for new projects."
+  },
+  {
+    cat: "REST API Clients",
+    q: "Which REST client is non-blocking, fast, and part of Spring WebFlux?",
+    opts: ["RestTemplate", "RestClient", "WebClient", "HttpURLConnection"],
+    ans: 2,
+    exp: "<strong>WebClient</strong> is the reactive, non-blocking client — most recommended for new microservice applications."
+  },
+  {
+    cat: "REST API Clients",
+    q: "Which REST client requires only an interface definition with no boilerplate code?",
+    opts: ["RestTemplate", "WebClient", "RestClient", "OpenFeign (FeignClient)"],
+    ans: 3,
+    exp: "<strong>OpenFeign</strong> uses a declarative interface-only style — no implementation needed. Popular in Spring Cloud microservices."
+  },
+  {
+    cat: "REST API Clients",
+    q: "RestClient was introduced in which version of Spring Boot?",
+    opts: ["Spring Boot 2", "Spring Boot 3+", "Spring Boot 1.5", "Spring Boot 4"],
+    ans: 1,
+    exp: "<strong>RestClient</strong> was introduced in Spring Boot 3+ as a modern, synchronous replacement for RestTemplate."
+  },
+  {
+    cat: "REST API Clients",
+    q: "HTTP Interfaces (@HttpExchange) differ from Feign because they:",
+    opts: ["Are faster than Feign", "Don't support GET methods", "Are built into Spring 6 with no Spring Cloud needed", "Require XML configuration"],
+    ans: 2,
+    exp: "<strong>HTTP Interfaces</strong> are natively built into Spring 6+. No Spring Cloud dependency is needed — unlike OpenFeign."
+  },
+
+  // HTTP Methods
+  {
+    cat: "HTTP Methods",
+    q: "Which HTTP method is NOT idempotent?",
+    opts: ["GET", "PUT", "DELETE", "POST"],
+    ans: 3,
+    exp: "<strong>POST</strong> is not idempotent — calling it multiple times creates multiple resources. GET, PUT, DELETE are idempotent."
+  },
+  {
+    cat: "HTTP Methods",
+    q: "You send PUT /users/1 three times with the same body. What happens?",
+    opts: ["3 new users are created", "User 1 is updated but result is the same each time", "Error on second call", "Only first call works"],
+    ans: 1,
+    exp: "<strong>PUT is idempotent</strong> — it sets the resource to the given state. Repeating it yields the same result."
+  },
+  {
+    cat: "HTTP Methods",
+    q: "Which HTTP method should be used to update only the email field of a user?",
+    opts: ["PUT", "POST", "PATCH", "DELETE"],
+    ans: 2,
+    exp: "<strong>PATCH</strong> is for partial updates — you send only the fields that changed, e.g. just the email."
+  },
+  {
+    cat: "HTTP Methods",
+    q: "POST /users is called 3 times. What is the likely result?",
+    opts: ["One user is created", "Error after first call", "Three separate users are created", "Same user is updated 3 times"],
+    ans: 2,
+    exp: "<strong>POST</strong> creates a new resource on every call — 3 calls = 3 new user records."
+  },
+  {
+    cat: "HTTP Methods",
+    q: "PUT requires you to send ___ in the request body.",
+    opts: ["Only changed fields", "Just the ID", "All fields of the resource", "Nothing"],
+    ans: 2,
+    exp: "<strong>PUT replaces the entire resource</strong> — you must send all fields, not just the changed ones."
+  },
+
+  // Microservice Security
+  {
+    cat: "Security & Microservices",
+    q: "Which starter enables authentication and authorization in a Spring Boot microservice?",
+    opts: ["spring-boot-starter-web", "spring-boot-starter-security", "spring-boot-starter-actuator", "spring-boot-starter-data-jpa"],
+    ans: 1,
+    exp: "<strong>spring-boot-starter-security</strong> enables authentication and authorization for your microservice."
+  },
+  {
+    cat: "Security & Microservices",
+    q: "Which starter allows a Spring Boot microservice to validate JWT tokens?",
+    opts: ["spring-boot-starter-oauth2-client", "spring-boot-starter-oauth2-resource-server", "spring-boot-starter-security", "spring-boot-starter-webflux"],
+    ans: 1,
+    exp: "<strong>spring-boot-starter-oauth2-resource-server</strong> allows the service to act as a resource server and validate JWT tokens."
+  },
+  {
+    cat: "Security & Microservices",
+    q: "In a stateless architecture, how does the server identify a user on each request?",
+    opts: ["Session ID stored on server", "Cookie with username", "JWT token sent by client every request", "IP address"],
+    ans: 2,
+    exp: "In <strong>stateless</strong> systems, the client sends a <strong>JWT token</strong> with every request. The server doesn't store session data."
+  },
+  {
+    cat: "Security & Microservices",
+    q: "Which of these best describes a STATEFUL system?",
+    opts: ["Every request is independent", "Server remembers past requests via session", "Uses JWT for auth", "No login required"],
+    ans: 1,
+    exp: "<strong>Stateful</strong> systems store session data on the server. Subsequent requests from the same user don't need to re-authenticate."
+  },
+  {
+    cat: "Security & Microservices",
+    q: "WebClient is included in the minimal microservice setup primarily because:",
+    opts: ["It is required for JWT validation", "It enables the service to make non-blocking calls to other services", "It replaces Spring Security", "It generates REST endpoints"],
+    ans: 1,
+    exp: "<strong>WebClient</strong> (from spring-boot-starter-webflux) is needed when the microservice needs to call other services in a non-blocking way."
+  },
+];
+
+let current = 0, score = 0, answered = 0;
+
+function startQuiz() {
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  document.getElementById('qTotal').textContent = questions.length;
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  document.getElementById('qNum').textContent = current + 1;
+  document.getElementById('scoreLive').textContent = score;
+  document.getElementById('qCat').textContent = q.cat;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('progressFill').style.width = ((current / questions.length) * 100) + '%';
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('btnNext').classList.remove('visible');
+
+  const letters = ['A', 'B', 'C', 'D'];
+  const optDiv = document.getElementById('options');
+  optDiv.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const el = document.createElement('div');
+    el.className = 'opt';
+    el.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    el.onclick = () => selectAnswer(i);
+    optDiv.appendChild(el);
+  });
+}
+
+function selectAnswer(idx) {
+  const q = questions[current];
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (idx === q.ans) {
+    opts[idx].classList.add('correct');
+    score++;
+    answered++;
+  } else {
+    opts[idx].classList.add('wrong');
+    opts[q.ans].classList.add('correct');
+    answered++;
+  }
+
+  document.getElementById('scoreLive').textContent = score;
+  const exp = document.getElementById('explanation');
+  exp.innerHTML = `💡 ${q.exp}`;
+  exp.style.display = 'block';
+  document.getElementById('btnNext').classList.add('visible');
+  document.getElementById('btnNext').textContent =
+    current < questions.length - 1 ? 'Next Question →' : 'See Results 🎯';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) { showResult(); return; }
+  document.getElementById('quiz').scrollTop = 0;
+  window.scrollTo(0, 0);
+  loadQuestion();
+}
+
+function showResult() {
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'flex';
+
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('resultRing').style.setProperty('--pct', pct + '%');
+  document.getElementById('resultScoreText').textContent = pct + '%';
+
+  let grade, msg;
+  if (pct >= 90) { grade = '🏆 Expert'; msg = 'Outstanding! You know Spring Boot deeply.'; }
+  else if (pct >= 75) { grade = '🥇 Advanced'; msg = 'Great work! A few more revisions and you\'re an expert.'; }
+  else if (pct >= 55) { grade = '🥈 Intermediate'; msg = 'Good progress! Keep studying the weaker areas.'; }
+  else { grade = '📚 Keep Learning'; msg = 'Review the material and try again — you\'ve got this!'; }
+
+  document.getElementById('resultGrade').textContent = grade;
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('bdCorrect').textContent = score;
+  document.getElementById('bdWrong').textContent = questions.length - score;
+  document.getElementById('bdAcc').textContent = pct + '%';
+}
+
+function retryQuiz() {
+  current = 0; score = 0; answered = 0;
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  loadQuestion();
+}
+
+// PWA Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').style.display = 'flex';
+});
+
+document.getElementById('btnInstall').addEventListener('click', () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      document.getElementById('installBanner').style.display = 'none';
+      deferredPrompt = null;
+    });
+  }
+});
+</script>
+
+<!-- Service Worker registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(e => console.log('SW error', e));
+  });
+}
+</script>
+</body>
+</html>
